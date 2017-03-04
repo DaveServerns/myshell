@@ -8,9 +8,12 @@
 
 
 
+
 int main(int argc, char  **argv) {
 
-  int i=0;
+  clear_shell();
+  int i,bg;
+  i=0;
   while(1){
     //print out current path
     print_cmd_prompt();
@@ -23,12 +26,14 @@ int main(int argc, char  **argv) {
     if (strcmp(line,"quit\n")==0){
       exit(0);
     }
+    bg = is_bg(line);
+
     char** args = get_cmd_args(line);
-    eval(args);
-    
+    eval(bg,args);
+
     free(line);
     free(args);
-
+    flush(stdout);
 
   }
 
