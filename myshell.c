@@ -33,7 +33,7 @@ int main(int argc, char  **argv) {
 
     free(line);
     free(args);
-    flush(stdout);
+    //fflush(stdout);
 
   }
 

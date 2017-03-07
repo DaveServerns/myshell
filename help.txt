@@ -1,0 +1,19 @@
+cd <directory, optional> - The 'cd' command will change the current default directory.
+If you do not provide a directory, then the current default directory will be set to the directory you are currently in.
+If you provide a directory name, you will be navigated to that directory.
+If the directory provided doesn't exist, you will be notified.
+
+clr - The 'clr' command will clear your screen of any previous commands and their responses, leaving the current line visible.
+
+dir <directory, optional> - The 'dir' command will list the contents of the directory provided.
+If you do not provide a directory, then the current directory will be listed.
+If the directory provided doesn't exist, you will be notified.
+
+environ - The 'environ' command will list all the environment variables.
+
+echo <comment> - The 'echo' command will print any text that is typed after
+the command on a new line. If the text provided has large white spaces, those will be displayed as single spaces.
+
+help - The 'help' command will display this user manual.
+
+quit - The 'quit' command will exit the shell.
