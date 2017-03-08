@@ -1,0 +1,82 @@
+
+MyShell User Help Manual
+_________________________________
+
+This is a small user manual to explain the capabilities of myshell
+
+_________________________________________________________________________
+
+This shell program supports several builtin commands that you can utilize:
+
+
+-cd <directory, optional> - The 'cd' command will change the current default directory.
+                            If you do not provide a directory, then the current default directory 
+                            will be set to the home directory or root directory of the current path.
+                            If you provide a directory name, you will be navigated 
+			    to that directory.
+			    Enter 'cd ..' to return to the previous directory in you current path
+			    If the directory provided doesn't exist, you will be notified.
+
+-clr - The 'clr' command will clear your screen of any previous commands and their responses, 
+       leaving the current line visible.
+
+-dir <directory, optional> - The 'dir' command will list the contents of the directory you are currently in.
+
+-environ - The 'environ' command will list all the environment variables.
+
+-echo <comment> - The 'echo' command will print any text that is typed after
+		  the command on a new line. If the no text provided it will just print a newline and return to 
+		  the prompt
+
+-help - The 'help' command will display this user manual.
+
+-quit - The 'quit' command will exit the shell.
+
+__________________________________________________________________________________________________________________
+
+The shell also supports other commands that are supported by the standard BASH shell(e.g. "ls", "date", "ps", "sleep",etc.)
+
+In addition to this the shell will also run other non BASH programs like "vim", "git" and others.
+
+______________________________________________________________________________________________________________________
+
+
+The shell also supports input and output redirection to and from a file. 
+This means a user can designate to send the output of a entered command to a specific file and write that to the file
+instead of stdout. Conversely the user can choose to get arguments for a command or program from the contents of the file
+by swapping the file with stdin.
+
+To perform redirection the user can follow the following conventions <program/builtin> <optional args> <redirection symbol> <file>
+
+Precede the <file> with these <redirection symbols> to perform input/output redirection:
+	1. '>' When this symbol precedes the file the program or command will create or overwrite (if the file exists)
+ 	       the file listed with its output.	
+
+	2. '>>' When this symbol precedes the file the program or command will append its output to the end of the file 
+		if it already exists. If the file does not exist it creates the file and writes to the beginning.
+
+	3. '<' When this precedes the file the program now takes its input from the contents of the contents of the file.
+____________________________________________________________________________________________________________________________
+
+
+The shell also (should) support piping, or interprocess communication. Similar to file redirection this changes the 
+input and output of two processes allowing a parent process to send its output to the input of another file. 
+
+This is done using the '|' symbol:
+
+example: "ls | wc"
+
+what this does is open a communication "pipe" between ls and wc. It changes the output of ls to input of wc.
+_____________________________________________________________________________________________________________________________
+
+
+The shell also allows the user to run processes in the background. This is done by ending you command with the '&' symbol.
+Either 'command&' or 'command &'. 
+
+What this means is that the command or process will run in the background and you can continue to run other commands in the shell 
+before the background process completes. Otherwise when not run in the back ground the process that creates and runs the child process
+would wait for the child to finish before resuming its activity.
+
+
+
+	       

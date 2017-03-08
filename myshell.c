@@ -12,7 +12,25 @@ int main(int argc, char  **argv) {
 
   if((argv[1] != NULL)&&(strcmp(argv[1],"batchfile")==0))
   {
-    printf("%s\n","help" );
+    char lineB[300];
+		size_t length = 300;
+		FILE *fp = fopen("batchfile", "r"); //Opens batchfile to read.
+
+		if(fp == NULL){
+			printf("Error. The file could not be opened. \n");
+		}
+    int bgB;
+    while(fgets(lineB, length, fp)){ //Reads through each line.
+			print_cmd_prompt();
+			printf("%s", lineB);
+      bgB=is_bg(lineB);
+      char** batchArgs = get_cmd_args(lineB);
+      eval(bgB,batchArgs);
+      free(batchArgs);
+
+    }
+
+
   }
   else //get input from the user
   {
