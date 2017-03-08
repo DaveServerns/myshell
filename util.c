@@ -1,59 +1,138 @@
-#include <stdio.h>
-#include <unistd.h>
-#include <string.h>
-#include <stdlib.h>
-#include <sys/wait.h>
-#include <sys/param.h>
-#include <dirent.h>
-#include <sys/stat.h>
-#include <fcntl.h>
-#include <errno.h>
+#include "myshell.h"
+
+void eval(int bg,char** inputs){//evaluate the user input and perform the action
+
+
+    //determine amount of arguments passed to cmd line
+    int argc=0;
+    int i; //rd used for redirects
+    for(i=0; inputs[i]!='\0';i++)
+    {
+      argc++;
+    }
+    //if there are not args entered the fucn will return and then print the prompt to get
+    //another set of commands
+    if(argc == 0)
+    {
+      return;
+    }
+    int rd;
+    int saved_stdout, saved_stdin; //store original stdin and out
+    //check for redirection
+    char** ex_args; // hold the tokens before redirect (ie "ls -l > file.txt" will store in ex_args)
+    int k; // for the loop
+    if(rd = check_redir(inputs))
+    {
+
+
+      int redir = check_redir_pos(inputs);// redir is the position of the redirect symbol is in inputs
+      char *file = inputs[redir + 1]; // sets file equal to the tok after the redirect symbol
+
+      for(k=0;k < (redir-1);k++)
+      {
+        ex_args[k]=inputs[k];
+      }
+      /*saving the state of stdin and out so that
+        after the redir we can return input to keyboard and
+        output to screen*/
+
+      if (rd==1 || rd == 2) {
+        saved_stdout = dup(STDOUT_FILENO);
+        redirection(file,rd);
+      }
+      else if(rd==3)
+      {
+        saved_stdin = dup(STDIN_FILENO);
+        redirection(file,rd);
+      }
+
+
+    }
+
+    //search for pipe symbol and then determine its position
+    /*int pipePos= is_pipe(inputs);
+    //if pipePos then there is a pipe and we need to break up the read end of
+    //the pipe and write end
+    char** cmdRead;
+    char** cmdWrite;
+    if(pipePos>0)
+    {
+      cmdRead[0] = inputs[pipePos-1];
+      cmdWrite[0] = inputs[pipePos+1];
+    }
 
 
 
+    char* cmd_1 = inputs[0];
+
+    if(pipePos>0)
+    {
+      my_pipe(cmdRead,cmdWrite);
+    }*/
+    //evaluate the command and perform the appropriate Allocation
+    char* cmd_1 = inputs[0];
+    if(strcmp(cmd_1,"clr")==0)
+    {
+      clear_shell();
+    }
+    else if(strcmp(cmd_1,"cd")==0)
+    {
+      change_dir(argc,inputs);
+    }
+    else if(strcmp(cmd_1, "dir")==0)
+    {
+      show_dir();
+    }
+    else if(strcmp(cmd_1,"echo")==0)
+    {
+      echo_cmd(argc,inputs);
+    }
+    else if(strcmp(cmd_1,"environ")==0)
+    {
+      print_environ();
+    }
+    else if(strcmp(cmd_1,"help")==0)
+    {
+      help_me();
+    }
+    else
+    {
+
+      if(rd)
+      {
+
+        /*if their is a redirect need to pass the new string to it in exec
+        excluding the > >> < symbol and the file */
+        fork_exec(bg,argc,ex_args);
+      }
+      else{
+        fork_exec(bg,argc,inputs);
+      }
 
 
-/*the my_pipe function is to process two commands that allow the processes called be these
-commands to communicate the input output steams*/
-void my_pipe(char** readEnd, char** writeEnd){
-  pid_t cpid;
-  int fd[2]; //file descriptor for the pipe either 0 or 1
+      /*if (ran < 0)
+      {
+        printf("%s\n", "No such command...try again");
+
+      }
+      printf("wpid: %d",ran);*/
 
 
+    }
 
-  if (pipe(fd) == -1) {
-		perror("pipe");
-	}
+  //free(cmd_1);
+  //restore the std in out back to the saved state.
+  if (rd==1 || rd == 2)
+  {
+    dup2(saved_stdout,1);
+    close(saved_stdout);
+  }
+  else if(rd==3)
+  {
+    dup2(saved_stdin,0);
 
-	//Fork process to run second cmd
-	if (fork() == 0)	{						// First Child running 2nd cmd with new stdin
-    close(fd[1]);
-    dup2(fd[0], 0);							// Setting stdin to read end of pipe
-		execvp(readEnd[0],NULL);
-
-	}
-
-	else if ((cpid = fork()) == 0){				// Second child running cmd1 with new stdout
-    close(fd[0]);
-    dup2(fd[1], 1);							// Setting stdout to write end of pipe
-		execvp(writeEnd[0],NULL);
+    close(saved_stdin);
+  }
 
 
-	}
-
-	else {
-		dup2(1, fd[1]);
-		fflush(stdout);
-		waitpid(cpid, NULL, 0);
-	}
-}
-
-
-int main(int argc, char const *argv[]) {
-  char** read;
-  char** writel;
-  read[0]="ls";
-  writel[0] = "wc";
-  my_pipe(read,writel);
-  return 0;
 }

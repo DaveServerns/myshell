@@ -287,15 +287,15 @@ int check_redir_pos(char** inputs){
 
     if (strcmp(inputs[i],">")==0)
     {
-      flag=i;
+      return flag=i;
     }
     else if(strcmp(inputs[i],">>")==0)
     {
-      flag=i;
+      return flag=i;
     }
     else if(strcmp(inputs[i],"<")==0)
     {
-      flag=i;
+      return flag=i;
     }
 
     i++;
@@ -315,7 +315,7 @@ void redirection(char* input, int flag){
         if(out<0)
         {
           //open failed print error
-          printf("error 69 opening file %s\n",strerror(errno));
+          printf("error opening file %s\n",strerror(errno));
         }
 
         dup2(out,1);//changes the old fd out with the new one making
@@ -328,7 +328,7 @@ void redirection(char* input, int flag){
       else if(flag==2)//if flag is 2 that means the redirection is >> which means writing
       {      //output of program to the file changing stdout fd only this will appen
             //if the file exists
-        printf("%s\n","I get here but dont do what I should" );
+
         out = open(input, O_APPEND | O_CREAT| O_WRONLY);
         if(out<0)
         {
@@ -361,124 +361,55 @@ void redirection(char* input, int flag){
     /*help_me opens the help file for the user and hopefully uses the more
     filter to display it one page at a time*/
     void help_me(){
-      system("more help.txt");
+      system("more readme");
     }
 
-    void eval(int bg,char** inputs){
-
-
-        //determine amount of arguments passed to cmd line
-        int argc=0;
-        int i; //rd used for redirects
-        for(i=0; inputs[i]!='\0';i++)
-        {
-          argc++;
-        }
-        //if there are not args entered the fucn will return and then print the prompt to get
-        //another set of commands
-        if(argc == 0)
-        {
-          return;
-        }
-        int rd;
-        int saved_stdout, saved_stdin; //store original stdin and out
-        //check for redirection
-        char** ex_args; // hold the tokens before redirect (ie "ls -l > file.txt" will store in ex_args)
-        int k; // for the loop
-        if(rd = check_redir(inputs))
-        {
-
-
-          int redir = check_redir_pos(inputs);// redir is the position of the redirect symbol is in inputs
-          char *file = inputs[redir + 1]; // sets file equal to the tok after the redirect symbol
-
-          for(k=0;k < (redir-1);k++)
-          {
-            ex_args[k]=inputs[k];
-          }
-          /*saving the state of stdin and out so that
-            after the redir we can return input to keyboard and
-            output to screen*/
-          printf("%s\n",ex_args[k] );
-          if (rd==1 || rd == 2) {
-            saved_stdout = dup(STDOUT_FILENO);
-            redirection(file,rd);
-          }
-          else if(rd==3)
-          {
-            saved_stdin = dup(STDIN_FILENO);
-            redirection(file,rd);
-          }
-
-
-        }
-
-
-        char* cmd_1 = inputs[0];
-
-        //evaluate the command and perform the appropriate Allocation
-        if(strcmp(cmd_1,"clr")==0)
-        {
-          clear_shell();
-        }
-        else if(strcmp(cmd_1,"cd")==0)
-        {
-          change_dir(argc,inputs);
-        }
-        else if(strcmp(cmd_1, "dir")==0)
-        {
-          show_dir();
-        }
-        else if(strcmp(cmd_1,"echo")==0)
-        {
-          echo_cmd(argc,inputs);
-        }
-        else if(strcmp(cmd_1,"environ")==0)
-        {
-          print_environ();
-        }
-        else if(strcmp(cmd_1,"help")==0)
-        {
-          help_me();
-        }
-        else
-        {
-          printf("%d\n",rd);
-          if(1)
-          {
-            printf("fuck %s\n",ex_args[k] );
-            /*if their is a redirect need to pass the new string to it in exec
-            excluding the > >> < symbol and the file */
-            fork_exec(bg,argc,ex_args);
-          }
-          else{
-            fork_exec(bg,argc,inputs);
-          }
-
-
-          /*if (ran < 0)
-          {
-            printf("%s\n", "No such command...try again");
-
-          }
-          printf("wpid: %d",ran);*/
-
-
-        }
-
-      //free(cmd_1);
-      //restore the std in out back to the saved state.
-      if (rd==1 || rd == 2)
+    int is_pipe(char** inputs){
+      int j; //finding the pipe in loop
+      int pipePresent = 0; //do we need to pipe?
+      for(j=0; inputs[j]!='\0'; j++)
       {
-        dup2(saved_stdout,1);
-        close(saved_stdout);
+        if(strcmp(inputs[j],"|")==0)
+        {
+          pipePresent =j;
+        }
       }
-      else if(rd==3)
-      {
-        dup2(saved_stdin,0);
-
-        close(saved_stdin);
-      }
-
-
+      return pipePresent;
     }
+
+    /*the my_pipe function is to process two commands that allow the processes called be these
+    commands to communicate the input output steams*/
+    void my_pipe(char** readEnd, char** writeEnd){
+      pid_t cpid;
+      int fd[2]; //file descriptor for the pipe either 0 or 1
+
+
+
+      if (pipe(fd) == -1) {
+    		perror("pipe");
+    	}
+
+    	//Fork process to run second cmd
+    	if (fork() == 0)	{						// First Child running 2nd cmd with new stdin
+        close(fd[1]);
+        dup2(fd[0], 0);							// Setting stdin to read end of pipe
+    		execvp(readEnd[0],readEnd);
+
+    	}
+
+    	else if ((cpid = fork()) == 0){				// Second child running cmd1 with new stdout
+        close(fd[0]);
+        dup2(fd[1], 1);							// Setting stdout to write end of pipe
+    		execvp(writeEnd[0],writeEnd);
+
+
+    	}
+
+    	else {
+    		dup2(1, fd[1]);
+    		fflush(stdout);
+    		waitpid(cpid, NULL, 0);
+    	}
+    }
+
+    
